@@ -1,0 +1,49 @@
+{
+  "inputs": [
+    {
+      "name": "random_value",
+      "public": false,
+      "type": "array",
+      "components": {
+        "size": 4,
+        "type": "u64"
+      }
+    },
+    {
+      "name": "initial_random",
+      "public": false,
+      "type": "array",
+      "components": {
+        "size": 4,
+        "type": "u64"
+      }
+    },
+    {
+      "name": "input_data",
+      "public": false,
+      "type": "array",
+      "components": {
+        "size": 100,
+        "type": "array",
+        "components": {
+          "size": 5,
+          "type": "u32"
+        }
+      }
+    },
+    {
+      "name": "hash_input",
+      "public": true,
+      "type": "array",
+      "components": {
+        "size": 4,
+        "type": "u64"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "type": "bool"
+    }
+  ]
+}

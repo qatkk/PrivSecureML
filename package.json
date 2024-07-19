@@ -1,0 +1,22 @@
+{
+  "name": "poisoning-prevention",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "bigint-conversion": "^2.4.3",
+    "circomlib": "^0.2.4",
+    "ethers": "^6.12.1",
+    "ffjavascript": "^0.3.0",
+    "keccak256": "^1.0.6",
+    "web3-utils": "^1.10.2"
+  },
+  "dependencies": {
+    "object-sizeof": "^2.6.4"
+  }
+}
