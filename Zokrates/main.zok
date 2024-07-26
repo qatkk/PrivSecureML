@@ -4,26 +4,25 @@ import "hashes/keccak/256bit" as keccak
 
 
 def computation_check <D, N, F>(u64[4] random_value, u64[4] hash_value, u32[N][D]input_data, u64[F]flattened_format) -> u64[4]:
-/////// Note: F should be devidable by D and G 
+/////// Note: F should be dividable by D  
     assert(F% D == 0)
     u32 G = F/D
-    u32 last_round = (N*D) % F
-    assert (last_round % D == 0)
-    u32 R =  if last_round == 0 then (N*D)/F else ((N*D)/F) + 1 fi 
+    u32 last_group = N % G
+    u32 R =  if last_group == 0 then N/G else (N/G) + 1 fi 
     u32 index = 0
     u64[D] formated_data = u32_array_to_u64(input_data[0])
     bool is_correct = false
     u64[4] data_hash = keccak([0])
     for u32 round in 0..R do 
         index = round * G
-        G = if round == (R-1) && last_round!= 0 then last_round/D else G fi 
+        G = if round == (R-1) && last_group!= 0 then last_group else G fi 
         for u32 group in 0..G do 
             formated_data = u32_array_to_u64(input_data[index + group])
             for u32 feature in 0..D do 
                 flattened_format[(group * D) + feature] = formated_data[feature]
             endfor 
         endfor 
-        data_hash = if round == R-1 && last_round!= 0 then keccak(flattened_format[0..last_round]) else keccak(flattened_format) fi
+        data_hash = if round == R-1 && last_group!= 0 then keccak(flattened_format[0.. (last_group * D)]) else keccak(flattened_format) fi
         hash_value = keccak::<12>([random_value[0], random_value[1], random_value[2], random_value[3], hash_value[0], hash_value[1], hash_value[2], hash_value[3], data_hash[0], data_hash[1], data_hash[2], data_hash[3]])
     endfor
     return hash_value
@@ -35,6 +34,6 @@ def computation_check <D, N, F>(u64[4] random_value, u64[4] hash_value, u32[N][D
 ///////             keep in mind that the batch size must be devidable by the grouping_parameter
 
 
-def main (private u64[4] random_value, private u64[4] initial_random, private u32[10][5] input_data, u64[4]hash_input, private u64[25] flattened_format ) -> bool :
-    u64[4] computed_hash = computation_check(random_value, initial_random, input_data, flattened_format) 
+def main (private u64[4] random_value, u64[4] initial_value, private u32[100][5] input_data, u64[4]hash_input, private u64[90] flattened_format ) -> bool :
+    u64[4] computed_hash = computation_check(random_value, initial_value, input_data, flattened_format) 
     return (computed_hash[0] == hash_input[0] && computed_hash[1] == hash_input[1] && computed_hash[2] == hash_input[2] && computed_hash[3] == hash_input[3])

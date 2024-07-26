@@ -39,6 +39,15 @@
         "size": 4,
         "type": "u64"
       }
+    },
+    {
+      "name": "flattened_format",
+      "public": false,
+      "type": "array",
+      "components": {
+        "size": 90,
+        "type": "u64"
+      }
     }
   ],
   "outputs": [
