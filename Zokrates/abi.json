@@ -10,8 +10,8 @@
       }
     },
     {
-      "name": "initial_random",
-      "public": false,
+      "name": "initial_value",
+      "public": true,
       "type": "array",
       "components": {
         "size": 4,
@@ -23,10 +23,10 @@
       "public": false,
       "type": "array",
       "components": {
-        "size": 100,
+        "size": 120,
         "type": "array",
         "components": {
-          "size": 5,
+          "size": 10,
           "type": "u32"
         }
       }
@@ -45,7 +45,7 @@
       "public": false,
       "type": "array",
       "components": {
-        "size": 90,
+        "size": 60,
         "type": "u64"
       }
     }

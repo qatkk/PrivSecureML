@@ -34,6 +34,6 @@ def computation_check <D, N, F>(u64[4] random_value, u64[4] hash_value, u32[N][D
 ///////             keep in mind that the batch size must be devidable by the grouping_parameter
 
 
-def main (private u64[4] random_value, u64[4] initial_value, private u32[100][5] input_data, u64[4]hash_input, private u64[90] flattened_format ) -> bool :
+def main (private u64[4] random_value, u64[4] initial_value, private u32[120][10] input_data, u64[4]hash_input, private u64[60] flattened_format ) -> bool :
     u64[4] computed_hash = computation_check(random_value, initial_value, input_data, flattened_format) 
     return (computed_hash[0] == hash_input[0] && computed_hash[1] == hash_input[1] && computed_hash[2] == hash_input[2] && computed_hash[3] == hash_input[3])
