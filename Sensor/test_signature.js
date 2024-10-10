@@ -222,11 +222,6 @@ fs.appendFileSync("./" + federify_test_input, " "  + "100" );
 
 fs.appendFileSync("./" + federify_test_input, (zok_rand_input + " " + zok_hash_input ));
 
-// hash_result = hash_result.split('x')[1];
-//
-//
-//
-
 for ( let i= 0; i<64;  i+=16) {
     let hash_int_value = hash_result.slice(i,i +16);
     fs.appendFileSync("./" + federify_test_input, " "  + (hexToBigint(hash_int_value)).toString().split("n")[0]);
