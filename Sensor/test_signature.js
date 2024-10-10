@@ -3,17 +3,12 @@ const crypto = require("crypto");
 const { bufToBigint, hexToBigint, bufToHex } = require("bigint-conversion");
 const web3 = require("web3-utils"); 
 const fs = require("fs");
-
+// const Math = require("Math");
 
 ///// Format of the hash in the scheme: 
 ///// H_i = Hash ( r || H_(i-1) || d_i)
 // One thing that I think may be a problem here is that the hash is more than 16 digits so when slicing it, it could be a problem but IDK
 
-
-/// To do: 
-    // 1- change the global parameters 
-    // 2- create functions for codes that yet don't have it 
-    // 3- get the inputs from text or by an input 
 
 
 
@@ -25,12 +20,14 @@ console.log("the initial random value is", initial_rand);
 let initial_hash = '0x' + initial_rand;
 const batch_size = 100;
 const number_of_features = 5;
+const number_of_classes = 3;
 // const size_of_flattened_format = ((batch_size * number_of_features )/ number_of_hashes) ; 
-const size_of_flattened_format = 65; 
+const size_of_flattened_format = 25;
 const grouping_param = size_of_flattened_format/number_of_features; 
 let data_points = [];
 let features = [];
 const file_address = "Outputs/zokrates_input";
+const federify_test_input = "Outputs/federify_input";
 let random_size = rand.length;
 let zok_rand_input = ''; 
 let zok_hash_input = '';
@@ -39,8 +36,9 @@ let zok_hash_input = '';
 
 ////////// Creating the data points 
 for (let i=0; i< batch_size; i++ ){
-    for (let j=0; j<number_of_features; j++)
-        features.push(bufToBigint(crypto.randomBytes(4)).toString().split("n")[0]);
+    for (let j=0; j<number_of_features-1; j++)
+        features.push(bufToBigint(crypto.randomBytes(1)).toString().split("n")[0]);
+    features.push(Math.floor(Math.random() * (number_of_classes )));
     data_points.push(features);
     features =[];
 }
@@ -79,7 +77,50 @@ console.log(grouped_data);
 // console.log(hexToBigint(first_chunk));
 
 
+function compute_mean (data_points) {
+    let sum = new Array(number_of_features - 1)
+        .fill(0)
+        .map(() => new Array(number_of_classes).fill(0));
+    let clas_dist = new Array(number_of_classes).fill(0);
+    for (let row= 0; row<batch_size; row++){
+        clas_dist[data_points[row][number_of_features-1]] ++;
+        for (let feature = 0; feature<number_of_features-1; feature ++) {
+            sum[feature][data_points[row][number_of_features-1]] += +data_points[row][feature];
+        }
+    }
+    for (let label=0; label<number_of_classes; label++) {
+        for (let feature=0; feature<number_of_features-1; feature++) {
+            sum[feature][label] = Math.floor(sum[feature][label] / clas_dist[label]);
+        }
+    }
+    return {
+        "mean": sum,
+        "class_distribution": clas_dist
+    }
+}
 
+
+function compute_varience (data_points, means) {
+    let diff = new Array(number_of_features - 1)
+        .fill(0)
+        .map(() => new Array(number_of_classes).fill(0));
+    let clas_dist = new Array(number_of_classes).fill(0);
+    for (let row= 0; row<batch_size; row++){
+        clas_dist[data_points[row][number_of_features-1]] ++;
+        for (let feature = 0; feature<number_of_features-1; feature ++) {
+            diff[feature][data_points[row][number_of_features-1]] +=  Math.pow(+means[feature][data_points[row][number_of_features-1]] - +data_points[row][feature], 2);
+        }
+    }
+    for (let label=0; label<number_of_classes; label++) {
+        for (let feature=0; feature<number_of_features-1; feature++) {
+            diff[feature][label] = Math.floor(diff[feature][label] / clas_dist[label]);
+        }
+    }
+    return {
+        "varience": diff,
+        "class_distribution": clas_dist
+    }
+}
 
 
 function hashing_without_grouping(data_points, rand, prev_hash){
@@ -145,35 +186,52 @@ hash_result = hash_result.split('x')[1];
 
 
 fs.appendFileSync("./" + file_address, " "  + grouped_data.flat().join(" ") ); 
-console.log("Grouped data is", grouped_data); 
 
 
 
 for ( let i= 0; i<64;  i+=16) {
     let hash_int_value = hash_result.slice(i,i +16);
     fs.appendFileSync("./" + file_address, " "  + (hexToBigint(hash_int_value)).toString().split("n")[0]);
-    
-    console.log(hexToBigint(hash_int_value).toString().split("n")[0]);
 }
 
 fs.appendFileSync("./" + file_address,  " " + create_flattened_format(size_of_flattened_format).flattened.join(" "));
 
 
-// console.log(create_flattened_format(size_of_flattened_format).flattened.join(" "));
-{
-// for (i = 0; i<4; i++){
-//     dummy = hexToBigint(buffer.slice(i*16, (i+1)*16)); 
-//     console.log(dummy);
-//     dummy = dummy.toString().split('n')[0];
-//     hash = hash + " " + dummy;
-// }
-// console.log(hash);
-// console.log(bufToBigint(hash));
-// const secret = new Fr(BigInt(utils.leBuff2int(crypto.randomBytes(32))));
-// let pub_key_point = G.mul(secret.n);
 
-// let signature = gen_Schnorr_sig(BigInt("10"), secret.n, pub_key_point);
-// console.log(signature); 
 
-// console.log(verify_Schnorr(signature.sig, signature.rand, BigInt("12"), pub_key_point.compress()));
+//////// writing the results for federify
+let mu_result=  compute_mean(data_points);
+let var_result = compute_varience(data_points, mu_result.mean);
+let mu_format = new Array(number_of_features -1).fill(new Array(number_of_classes).fill(0));
+console.log("varience result is ", var_result.varience);
+
+
+fs.writeFileSync("./" + federify_test_input, " "  + grouped_data.flat().join(" ") );
+
+
+fs.appendFileSync("./" + federify_test_input, " "  + mu_result.mean.flat().join(" ") );
+
+fs.appendFileSync("./" + federify_test_input, " "  + var_result.varience.flat().join(" ") );
+
+fs.appendFileSync("./" + federify_test_input, " "  + mu_result.class_distribution.join(" ") );
+
+fs.appendFileSync("./" + federify_test_input, " "  + mu_format.flat().join(" ") );
+
+fs.appendFileSync("./" + federify_test_input, " "  + "100" );
+
+
+fs.appendFileSync("./" + federify_test_input, (zok_rand_input + " " + zok_hash_input ));
+
+// hash_result = hash_result.split('x')[1];
+//
+//
+//
+
+for ( let i= 0; i<64;  i+=16) {
+    let hash_int_value = hash_result.slice(i,i +16);
+    fs.appendFileSync("./" + federify_test_input, " "  + (hexToBigint(hash_int_value)).toString().split("n")[0]);
 }
+
+fs.appendFileSync("./" + federify_test_input,  " " + create_flattened_format(size_of_flattened_format).flattened.join(" "));
+
+
